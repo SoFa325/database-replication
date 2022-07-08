@@ -1,12 +1,12 @@
 package com.company;
-import java.sql.Connection;
-import java.sql.DriverManager;
+import java.sql.*;
+
 
 public class MysqlConn {
     public static Connection getMySQLConnection() {
         Connection con = null;
         try {
-            String url = "jdbc:postgresql://localhost:3306/newdb";
+            String url = "jdbc:mysql://localhost:3306/newdb";
             String login = "root";
             String password = "mysql";
             con = DriverManager.getConnection(url, login, password);
