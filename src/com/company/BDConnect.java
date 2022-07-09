@@ -3,7 +3,7 @@ import java.sql.*;
 
 
 public class BDConnect {
-    public static Connection getConnection(String url, String login, String password) {
+    public Connection getConnection(String url, String login, String password) {
         Connection con = null;
         try {
             con = DriverManager.getConnection(url, login, password);

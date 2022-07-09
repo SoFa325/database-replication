@@ -2,17 +2,15 @@ package com.company;
 import java.sql.*;
 
 public class CRUDRepository {
+    String cols;
+    int n;
 
-    public boolean create(Record rec, Connection conn) {
+    public boolean create(String res, Connection conn) {
         try {
-        String sql = "INSERT data(FirstName, LastName, Phone, Email) Values (?, ?, ?, ?);";
-        PreparedStatement preparedStatement = conn.prepareStatement(sql);
-        preparedStatement.setString(1, rec.FirstName);
-        preparedStatement.setString(2, rec.LastName);
-        preparedStatement.setString(3, rec.Phone);
-        preparedStatement.setString(4, rec.Email);
-        System.out.println(sql);
-        preparedStatement.executeUpdate();
+            String sql = "INSERT data(" + cols + ") Values (" + res + ");";
+            Statement St = conn.prepareStatement(sql);
+            System.out.println(sql);
+            St.execute(sql);
         } catch (SQLException throwables) {
             throwables.printStackTrace();
             System.out.println("Error2");
@@ -20,15 +18,18 @@ public class CRUDRepository {
         }
         return true;
     }
-    public Record read(Connection con, int id) {
-        Statement stmt = null;
-        Record rec = null;
+    public String read(Connection con, int id) {
+        Statement stmt;
+        String rec = "";
         try {
             stmt = con.createStatement();
             String sql = "SELECT * FROM data WHERE id = " + id + ";";
             ResultSet rs = stmt.executeQuery(sql);
             rs.next();
-            rec = new Record(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5));
+            rec += rs.getObject(1);
+            for (int i = 2; i <= n; i++){
+                rec += ", " + "'" + rs.getObject(i) + "'";
+            }
             rs.close();
             stmt.close();
         } catch (SQLException throwables) {
