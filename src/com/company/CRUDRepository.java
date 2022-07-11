@@ -1,5 +1,9 @@
 package com.company;
 import java.sql.*;
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.RowSetFactory;
+import javax.sql.rowset.RowSetProvider;
+
 
 public class CRUDRepository {
     String cols;
@@ -11,30 +15,33 @@ public class CRUDRepository {
             Statement St = conn.prepareStatement(sql);
             System.out.println(sql);
             St.execute(sql);
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            System.out.println("Error2");
+        } catch (Exception ex) {
+            ex.printStackTrace();
             return false;
         }
         return true;
     }
-    public String read(Connection con, int id) {
-        Statement stmt;
+    public String read(String url, String username, String password, int id) {
         String rec = "";
         try {
-            stmt = con.createStatement();
             String sql = "SELECT * FROM data WHERE id = " + id + ";";
-            ResultSet rs = stmt.executeQuery(sql);
+            RowSetFactory factory = RowSetProvider.newFactory();
+            CachedRowSet rs = factory.createCachedRowSet();
+
+            rs.setUrl(url);
+            rs.setUsername(username);
+            rs.setPassword(password);
+            rs.setCommand(sql);
+
+            rs.execute();
             rs.next();
             rec += rs.getObject(1);
             for (int i = 2; i <= n; i++){
                 rec += ", " + "'" + rs.getObject(i) + "'";
             }
             rs.close();
-            stmt.close();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            System.out.println("Error1");
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return rec;
     }
@@ -45,11 +52,9 @@ public class CRUDRepository {
 
         return true;
     }
-    public boolean delete() {
-
-
-
-
-        return true;
+    public void delete(Connection conn, int id) throws Exception {
+        String sql = "DELETE  FROM data WHERE Id = " + id + " ;" ;
+        Statement st = conn.createStatement();
+        st.execute(sql);
     }
 }

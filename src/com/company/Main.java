@@ -1,5 +1,6 @@
 package com.company;
 import java.sql.*;
+
 public class Main
 {
     public static void main(String[] args){
@@ -9,7 +10,7 @@ public class Main
             Connection mysqlCon = conn.getConnection("jdbc:mysql://localhost:3306/newdb", "root", "mysql");
 
             //metadata
-            DatabaseMetaData metadata = postgrCon.getMetaData();
+           DatabaseMetaData metadata = postgrCon.getMetaData();
             ResultSet rs;
             String actualTable = "data";
             String cols = "";
@@ -28,17 +29,20 @@ public class Main
             CRUDRepository crud = new CRUDRepository();
             crud.cols = cols;
             crud.n = n;
-            for (int i = 1; i <= 6; i++) {
+
+
+            /*for (int i = 1; i <= 6; i++) {
                 String res = crud.read(postgrCon, i);
                 if (!crud.create(res, mysqlCon)) {
                     System.out.println("Error");
                 }
-            }
+            } */
+
             postgrCon.close();
             mysqlCon.close();
         }
-         catch (Exception e) {
-            e.printStackTrace();
+         catch (Exception ex) {
+            ex.printStackTrace();
         }
 
     }
