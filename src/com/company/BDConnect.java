@@ -7,9 +7,8 @@ public class BDConnect {
         Connection con = null;
         try {
             con = DriverManager.getConnection(url, login, password);
-        } catch (Exception e) {
-            System.out.println("Error4");
-            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return con;
     }

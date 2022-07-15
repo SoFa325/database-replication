@@ -1,5 +1,8 @@
 package com.company;
-import java.sql.*;
+import javax.sql.rowset.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 
 public class Main
 {
@@ -10,7 +13,7 @@ public class Main
             Connection mysqlCon = conn.getConnection("jdbc:mysql://localhost:3306/newdb", "root", "mysql");
 
             //metadata
-           DatabaseMetaData metadata = postgrCon.getMetaData();
+            DatabaseMetaData metadata = postgrCon.getMetaData();
             ResultSet rs;
             String actualTable = "data";
             String cols = "";
@@ -27,17 +30,20 @@ public class Main
             //end metadata
 
             CRUDRepository crud = new CRUDRepository();
-            crud.cols = cols;
-            crud.n = n;
 
 
-            /*for (int i = 1; i <= 6; i++) {
-                String res = crud.read(postgrCon, i);
-                if (!crud.create(res, mysqlCon)) {
-                    System.out.println("Error");
-                }
-            } */
-
+            BDChange bd = new BDChange("jdbc:postgresql://localhost:5432/newbd", "jdbc:mysql://localhost:3306/newdb", "postgres", "root", "postgres", "mysql", cols, n);
+            bd.add(mysqlCon);
+            bd.delete(mysqlCon);
+            RowSetFactory factory = RowSetProvider.newFactory();
+            bd.crs2 = factory.createCachedRowSet();
+            String sql = "SELECT * FROM data";
+            bd.crs2.setUrl("jdbc:mysql://localhost:3306/newdb");
+            bd.crs2.setUsername("root");
+            bd.crs2.setPassword("mysql");
+            bd.crs2.setCommand(sql);
+            bd.crs2.execute();
+            bd.update(mysqlCon);
             postgrCon.close();
             mysqlCon.close();
         }

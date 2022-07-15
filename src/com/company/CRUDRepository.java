@@ -21,7 +21,7 @@ public class CRUDRepository {
         }
         return true;
     }
-    public String read(String url, String username, String password, int id) {
+    public String read(String url, String username, String password, Object id) {
         String rec = "";
         try {
             String sql = "SELECT * FROM data WHERE id = " + id + ";";
@@ -45,15 +45,19 @@ public class CRUDRepository {
         }
         return rec;
     }
-    public boolean update() {
-
-
-
-
-        return true;
+    public void update(Connection conn, String res) {
+        try {
+            String sql = "UPDATE data SET " + res + ";";
+            Statement St = conn.prepareStatement(sql);
+            System.out.println(sql);
+            St.execute(sql);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
-    public void delete(Connection conn, int id) throws Exception {
+    public void delete(Connection conn, Object id) throws Exception {
         String sql = "DELETE  FROM data WHERE Id = " + id + " ;" ;
+        System.out.println(sql);
         Statement st = conn.createStatement();
         st.execute(sql);
     }
