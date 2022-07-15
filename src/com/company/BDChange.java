@@ -2,77 +2,55 @@ package com.company;
 import javax.sql.rowset.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collection;
 
 public class BDChange {
-    String url;
-    String username;
-    String password;
-    Object [] adding;
-    Object [] deleting;
-    CachedRowSet crs1;
-    CachedRowSet crs2;
-    CRUDRepository crud = new CRUDRepository();
+    String url1;
+    String username1;
+    String password1;
+    String url2;
+    String username2;
+    String password2;
+
+    CRUDRepository crud1;
+    CRUDRepository crud2;
 
 
-    public BDChange(String url1, String url2, String username1, String username2, String password1, String password2, String cols, int n) throws SQLException {
+    public BDChange(String url1, String url2, String username1, String username2, String password1, String password2) throws SQLException{
+        this.url1 = url1;
+        this.username1 = username1;
+        this.password1 = password1;
+        this.url2 = url2;
+        this.username2 = username2;
+        this.password2 = password2;
 
-        this.url = url1;
-        this.username = username1;
-        this.password = password1;
-        String sql = "SELECT * FROM data";
-        RowSetFactory factory = RowSetProvider.newFactory();
-        crs1 = factory.createCachedRowSet();
-        crs2 = factory.createCachedRowSet();
-
-        crs1.setUrl(url1);
-        crs1.setUsername(username1);
-        crs1.setPassword(password1);
-        crs1.setCommand(sql);
-        crs1.execute();
-        Collection col1 = crs1.toCollection("Id");
-        Collection col3 = crs1.toCollection("Id");
-
-        crs2.setUrl(url2);
-        crs2.setUsername(username2);
-        crs2.setPassword(password2);
-        crs2.setCommand(sql);
-        crs2.execute();
-
-        Collection col2 = crs2.toCollection("Id");
-        Collection col4 = crs2.toCollection("Id");
-
-        //add
-        col1.removeAll(col2);
-        Object[] al = col1.toArray();
-        this.adding = al;
-        System.out.println(col1);
-
-        //delete
-        col4.removeAll(col3);
-        Object[] al1 = col4.toArray();
-        this.deleting = al1;
-        System.out.println(col4);
-        crud.cols = cols;
-        crud.n = n;
+        //crud.cols = cols;
+        //crud.n = n;
 
     }
 
-    public void add(Connection con){
-        for (int i = 0; i < adding.length; i++){
-            String res = crud.read(url, username, password, adding[i]);
-            crud.create(res, con);
+    public void getFirstConnection() throws SQLException {
+        crud1 = new CRUDRepository(url1, url2, username1, username2, password1, password2);
+
+    }
+    public void getSecondConnection() {
+        crud2 = new CRUDRepository(url2, username2, password2);
+    }
+
+    public void add(){
+        for (int i = 0; i < crud1.coladd.length; i++){
+            String res = crud2.read(url1, username1, password1, crud1.coladd[i]);
+            crud2.create(res);
         }
     }
 
-    public void delete(Connection con) throws Exception {
-        for (int i = 0; i < deleting.length; i++){
-            crud.delete(con, deleting[i]);
+    public void delete() throws Exception {
+        for (int i = 0; i < crud1.coldel.length; i++){
+            crud2.delete(crud1.coldel[i]);
         }
     }
 
-    public void update(Connection con) throws Exception {
-        String[] s = crud.cols.split(", ");
+    /*public void update(Connection con) throws Exception {
+        String[] s = crud2.cols.split(", ");
         while(crs1.next() && crs2.next())
         {
             String firstRSRow = "";
@@ -92,5 +70,5 @@ public class BDChange {
                 crud.update(con, res);
             }
         }
-    }
+    }*/
 }
