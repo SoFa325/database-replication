@@ -1,52 +1,59 @@
 package com.company;
 import javax.sql.rowset.*;
-import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 
 public class BDChange {
-    String url1;
-    String username1;
-    String password1;
-    String url2;
-    String username2;
-    String password2;
 
-    CRUDRepository crud1;
-    CRUDRepository crud2;
+    Object [] coladd;
+    Object [] coldel;
+    CRUDRepository crud = new CRUDRepository();
+    CachedRowSet crs1;
+    CachedRowSet crs2;
+    String cols;
 
-
-    public BDChange(String url1, String url2, String username1, String username2, String password1, String password2) throws SQLException{
-        this.url1 = url1;
-        this.username1 = username1;
-        this.password1 = password1;
-        this.url2 = url2;
-        this.username2 = username2;
-        this.password2 = password2;
-
-        //crud.cols = cols;
-        //crud.n = n;
-
+    public void write(){
+        crud.ConnectForUpdate();
     }
-
-    public void getFirstConnection() throws SQLException {
-        crud1 = new CRUDRepository(url1, url2, username1, username2, password1, password2);
-
+    public void endOfWriting() throws SQLException {
+        crud.conWithSecbd.close();
     }
-    public void getSecondConnection() {
-        crud2 = new CRUDRepository(url2, username2, password2);
+    public void getColAdd() throws Exception{
+        Collection col1 = crs1.toCollection(crud.primaryKeyFirstTableName);
+        Collection col2 = crs2.toCollection(crud.primaryKeySecondTableName);
+        col1.removeAll(col2);
+        Object[] al = col1.toArray();
+        this.coladd = al;
+    }
+    public void getColDel() throws Exception{
+        Collection col3 = crs1.toCollection(crud.primaryKeyFirstTableName);
+        Collection col4 = crs2.toCollection(crud.primaryKeySecondTableName);
+        col4.removeAll(col3);
+        Object[] al1 = col4.toArray();
+        this.coldel = al1;
     }
 
     public void add(){
-        for (int i = 0; i < crud1.coladd.length; i++){
-            String res = crud2.read(url1, username1, password1, crud1.coladd[i]);
-            crud2.create(res);
+        for (int i = 0; i < coladd.length; i++){
+            String res = crud.read(coladd[i]);
+            crud.create(res, cols);
         }
     }
 
     public void delete() throws Exception {
-        for (int i = 0; i < crud1.coldel.length; i++){
-            crud2.delete(crud1.coldel[i]);
+        for (int i = 0; i < coldel.length; i++){
+            crud.delete(coldel[i]);
         }
+    }
+
+    public void initialize() throws Exception{
+        crud.ConnectForRead();
+        cols = crud.metadata();
+        crud.downloadData();
+        this.crs1 = crud.crs1;
+        this.crs2 = crud.crs2;
+        crud.conWithSecbd.close();
+        crud.conWithFrstbd.close();
     }
 
     /*public void update(Connection con) throws Exception {
