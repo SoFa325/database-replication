@@ -3,15 +3,17 @@ package com.company;
 public class Main
 {
     public static void main(String[] args){
+
         try {
-            BDChange bd = new BDChange();
+            BDReplication bd = new BDReplication();
             bd.initialize();
             bd.getColAdd();
             bd.getColDel();
-            bd.write();
+            bd.connectToSecDB();
             bd.add();
             bd.delete();
-            bd.endOfWriting();
+            bd.update();
+            bd.closeConnect();
         }
         catch (Exception ex) {
             ex.printStackTrace();

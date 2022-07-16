@@ -1,16 +1,18 @@
 package com.company;
 import java.sql.*;
 import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.JoinRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 
-
 public class CRUDRepository {
     int n;
+    int k;
     Connection conWithFrstbd;
     Connection conWithSecbd;
-    CachedRowSet crs1;
-    CachedRowSet crs2;
+    CachedRowSet crsFromFirstBD;
+    CachedRowSet crsFromSecondBD;
+    JoinRowSet jrs;
     String url1;
     String login1;
     String password1;
@@ -34,10 +36,9 @@ public class CRUDRepository {
         password2 = conn.password2;
         firstTableName = conn.firstTableName;
         secondTableName = conn.secondTableName;
-        primaryKeyFirstTableName = conn.primaryKeyFirstTableName;
-        primaryKeySecondTableName = conn.primaryKeySecondTableName;
 
     }
+
     public void ConnectForUpdate(){
         BDConnect conn = new BDConnect();
         this.conWithSecbd = conn.getConnectionWithSecondBD();
@@ -49,22 +50,23 @@ public class CRUDRepository {
 
     public void downloadData() throws Exception{
         RowSetFactory factory = RowSetProvider.newFactory();
+        jrs = factory.createJoinRowSet();
 
         String sql1 = "SELECT * FROM " + firstTableName;
-        crs1 = factory.createCachedRowSet();
-        crs1.setUrl(url1);
-        crs1.setUsername(login1);
-        crs1.setPassword(password1);
-        crs1.setCommand(sql1);
-        crs1.execute();
+        crsFromFirstBD = factory.createCachedRowSet();
+        crsFromFirstBD.setUrl(url1);
+        crsFromFirstBD.setUsername(login1);
+        crsFromFirstBD.setPassword(password1);
+        crsFromFirstBD.setCommand(sql1);
+        crsFromFirstBD.execute();
 
         String sql2 = "SELECT * FROM " + secondTableName;
-        crs2 = factory.createCachedRowSet();
-        crs2.setUrl(url2);
-        crs2.setUsername(login2);
-        crs2.setPassword(password2);
-        crs2.setCommand(sql2);
-        crs2.execute();
+        crsFromSecondBD = factory.createCachedRowSet();
+        crsFromSecondBD.setUrl(url2);
+        crsFromSecondBD.setUsername(login2);
+        crsFromSecondBD.setPassword(password2);
+        crsFromSecondBD.setCommand(sql2);
+        crsFromSecondBD.execute();
     }
 
     public String metadata() throws Exception{
@@ -72,8 +74,20 @@ public class CRUDRepository {
         ResultSet rs;
         String cols = "";
         n = 0;
+        ResultSet primaryKeysFirst = metadata.getPrimaryKeys(null, null, firstTableName);
+        while(primaryKeysFirst.next()){
+            primaryKeyFirstTableName = primaryKeysFirst.getString("COLUMN_NAME");
+        }
+        ResultSet primaryKeysSecond = metadata.getPrimaryKeys(null, null, secondTableName);
+        while(primaryKeysSecond.next()){
+            primaryKeySecondTableName = primaryKeysSecond.getString("COLUMN_NAME");
+        }
+
         rs = metadata.getColumns(null, null, firstTableName, null);
         while (rs.next()) {
+            if (rs.getString("COLUMN_NAME").equals(primaryKeyFirstTableName)){
+                k = n;
+            }
             if (cols.equals("")) {
                 cols += rs.getString("COLUMN_NAME");
             } else {
@@ -81,13 +95,14 @@ public class CRUDRepository {
             }
             n++;
         }
+        System.out.println(k);
         return cols;
     }
 
     public boolean create(String res, String cols) {
         try {
             String sql = "INSERT " + secondTableName + "(" + cols + ") Values (" + res + ");";
-            Statement St = conWithSecbd.prepareStatement(sql);
+            Statement St = conWithSecbd.createStatement();
             System.out.println(sql);
             St.execute(sql);
         } catch (Exception ex) {
@@ -96,6 +111,7 @@ public class CRUDRepository {
         }
         return true;
     }
+
     public String read(Object id) {
         String rec = "";
         try {
@@ -118,20 +134,23 @@ public class CRUDRepository {
         }
         return rec;
     }
-    public void update(String res) {
+
+    public void update(String res, Object id) {
         try {
-            String sql = "UPDATE " + secondTableName + " SET" + res + ");";
-            Statement St = conWithSecbd.prepareStatement(sql);
+            String sql = "UPDATE " + secondTableName + " SET " + res + " WHERE " + primaryKeySecondTableName + " = " + id  + ";";
+            Statement st = conWithSecbd.createStatement();
             System.out.println(sql);
-            St.execute(sql);
+            st.execute(sql);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
+
     public void delete(Object id) throws Exception {
         String sql = "DELETE  FROM " + secondTableName + " WHERE " + primaryKeySecondTableName + " = " + id + " ;" ;
         System.out.println(sql);
         Statement st = conWithSecbd.createStatement();
         st.execute(sql);
     }
+
 }

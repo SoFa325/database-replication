@@ -11,8 +11,7 @@ public class BDConnect {
     String password2 = "mysql";
     String firstTableName = "data";
     String secondTableName = "data";
-    String primaryKeyFirstTableName = "Id";
-    String primaryKeySecondTableName = "Id";
+
     public Connection getConnectionWithFirstBD() {
         Connection con = null;
         try {
@@ -22,6 +21,7 @@ public class BDConnect {
         }
         return con;
     }
+
     public Connection getConnectionWithSecondBD() {
         Connection con = null;
         try {
