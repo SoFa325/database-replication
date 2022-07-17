@@ -114,19 +114,17 @@ public class CRUDRepository {
             Collections.sort(alFirst);
             Collections.sort(alSecond);
             if (!(alFirst.equals(alSecond))){
-                System.out.println("Tables are not equal");
-                return "";
+                throw new IllegalStateException("Tables are not equal");
             }
         } else {
-            System.out.println("Tables are not equal");
-            return "";
+            throw new IllegalStateException("Tables are not equal");
         }
         return cols;
     }
 
     public boolean create(String res, String cols) {
         try {
-            String sql = "INSERT " + secondBDTableName + "(" + cols + ") Values (" + res + ");";
+            String sql = "INSERT INTO " + secondBDTableName + " (" + cols + ") Values (" + res + ");";
             Statement St = conWithSecbd.createStatement();
             System.out.println(sql);
             St.execute(sql);

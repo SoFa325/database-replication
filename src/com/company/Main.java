@@ -6,14 +6,7 @@ public class Main
 
         try {
             BDReplication bd = new BDReplication();
-            bd.initialize();
-            bd.getColAdd();
-            bd.getColDel();
-            bd.connectToSecDB();
-            bd.add();
-            bd.delete();
-            bd.update();
-            bd.closeConnect();
+            bd.run();
         }
         catch (Exception ex) {
             ex.printStackTrace();

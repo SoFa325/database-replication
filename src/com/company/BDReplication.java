@@ -20,6 +20,17 @@ public class BDReplication {
         crud.conWithSecbd.close();
     }
 
+    public void run() throws Exception{
+        initialize();
+        getColAdd();
+        getColDel();
+        connectToSecDB();
+        add();
+        delete();
+        update();
+        closeConnect();
+    }
+
     public void getColAdd() throws Exception{
         Collection colFromFirstBD = crsFromFirstBD.toCollection(crud.primaryKeyFirstTableName);
         Collection colFromSecondBD = crsFromSecondBD.toCollection(crud.primaryKeySecondTableName);
@@ -50,12 +61,10 @@ public class BDReplication {
     public void initialize() throws Exception{
         crud.connectForRead();
         cols = crud.metadata();
-        if (!cols.equals("")) {
-            crud.downloadData();
-            this.crsFromFirstBD = crud.crsFromFirstBD;
-            this.crsFromSecondBD = crud.crsFromSecondBD;
-            this.jrs = crud.jrs;
-        }
+        crud.downloadData();
+        this.crsFromFirstBD = crud.crsFromFirstBD;
+        this.crsFromSecondBD = crud.crsFromSecondBD;
+        this.jrs = crud.jrs;
         crud.conWithSecbd.close();
         crud.conWithFrstbd.close();
 
