@@ -1,21 +1,38 @@
 package com.company;
+import java.io.File;
+import java.io.FileReader;
 import java.sql.*;
+import java.util.Properties;
 
 
 public class BDConnect {
-    String url1 = "jdbc:postgresql://localhost:5432/newbd";
-    String login1 = "postgres";
-    String password1 = "postgres";
-    String url2 = "jdbc:mysql://localhost:3306/newdb";
-    String login2 = "root";
-    String password2 = "mysql";
-    String firstTableName = "data";
-    String secondTableName = "data";
+    String firstBDurl;
+    String firstBDLogin;
+    String firstBDPassword;
+    String secondBDurl;
+    String secondBDLogin;
+    String secondBDPassword;
+    String firstBDTableName;
+    String secondBDTableName;
+
+    public BDConnect() throws Exception {
+        File file = new File("C:\\Users\\sofya\\IdeaProjects\\database_replication\\src\\com\\company\\config.properties");
+        Properties properties = new Properties();
+        properties.load(new FileReader(file));
+        this.firstBDurl = "jdbc:" + properties.getProperty("firstBDType") + ":" + properties.getProperty("firstBDAddress") + "/" + properties.getProperty("firstBDName");
+        this.firstBDLogin = properties.getProperty("firstBDLogin");
+        this.firstBDPassword = properties.getProperty("firstBDPassword");
+        this.secondBDurl = "jdbc:" + properties.getProperty("secondBDType") + ":" + properties.getProperty("secondBDAddress") + "/" + properties.getProperty("secondBDName");
+        this.secondBDLogin = properties.getProperty("secondBDLogin");
+        this.secondBDPassword = properties.getProperty("secondBDPassword");
+        this.firstBDTableName = properties.getProperty("firstBDTableName");
+        this.secondBDTableName = properties.getProperty("secondBDTableName");
+    }
 
     public Connection getConnectionWithFirstBD() {
         Connection con = null;
         try {
-            con = DriverManager.getConnection(url1, login1, password1);
+            con = DriverManager.getConnection(firstBDurl, firstBDLogin, firstBDPassword);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -25,7 +42,7 @@ public class BDConnect {
     public Connection getConnectionWithSecondBD() {
         Connection con = null;
         try {
-            con = DriverManager.getConnection(url2, login2, password2);
+            con = DriverManager.getConnection(secondBDurl, secondBDLogin, secondBDPassword);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

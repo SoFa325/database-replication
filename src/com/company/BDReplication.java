@@ -6,15 +6,14 @@ import java.util.Collection;
 public class BDReplication {
     Object [] coladd;
     Object [] coldel;
-    Object [] colupd;
     CRUDRepository crud = new CRUDRepository();
     CachedRowSet crsFromFirstBD;
     CachedRowSet crsFromSecondBD;
     JoinRowSet jrs;
     String cols;
 
-    public void connectToSecDB(){
-        crud.ConnectForUpdate();
+    public void connectToSecDB() throws Exception {
+        crud.connectForUpdate();
     }
 
     public void closeConnect() throws SQLException {
@@ -49,7 +48,7 @@ public class BDReplication {
     }
 
     public void initialize() throws Exception{
-        crud.ConnectForRead();
+        crud.connectForRead();
         cols = crud.metadata();
         crud.downloadData();
         this.crsFromFirstBD = crud.crsFromFirstBD;
@@ -61,8 +60,8 @@ public class BDReplication {
     }
 
     public void update() throws Exception {
-        jrs.addRowSet(crsFromFirstBD, "Id");
-        jrs.addRowSet(crsFromSecondBD, "Id");
+        jrs.addRowSet(crsFromFirstBD, crud.primaryKeyFirstTableName);
+        jrs.addRowSet(crsFromSecondBD, crud.primaryKeySecondTableName);
         String[] s = cols.split(", ");
         while(jrs.next())
         {

@@ -13,38 +13,38 @@ public class CRUDRepository {
     CachedRowSet crsFromFirstBD;
     CachedRowSet crsFromSecondBD;
     JoinRowSet jrs;
-    String url1;
-    String login1;
-    String password1;
-    String url2;
-    String login2;
-    String password2;
-    String firstTableName;
-    String secondTableName;
+    String firstBDurl;
+    String firstBDLogin;
+    String firstBDPassword;
+    String secondBDurl;
+    String secondBDLogin;
+    String secondBDPassword;
+    String firstBDTableName;
+    String secondBDTableName;
     String primaryKeyFirstTableName;
     String primaryKeySecondTableName;
 
-    public void ConnectForRead() {
+    public void connectForRead() throws Exception {
         BDConnect conn = new BDConnect();
         this.conWithFrstbd = conn.getConnectionWithFirstBD();
         this.conWithSecbd = conn.getConnectionWithSecondBD();
-        url1 = conn.url1;
-        login1 = conn.login1;
-        password1 = conn.password1;
-        url2 = conn.url2;
-        login2 = conn.login2;
-        password2 = conn.password2;
-        firstTableName = conn.firstTableName;
-        secondTableName = conn.secondTableName;
+        firstBDurl = conn.firstBDurl;
+        firstBDLogin = conn.firstBDLogin;
+        firstBDPassword = conn.firstBDPassword;
+        secondBDurl = conn.secondBDurl;
+        secondBDLogin = conn.secondBDLogin;
+        secondBDPassword = conn.secondBDPassword;
+        firstBDTableName = conn.firstBDTableName;
+        secondBDTableName = conn.secondBDTableName;
 
     }
 
-    public void ConnectForUpdate(){
+    public void connectForUpdate() throws Exception {
         BDConnect conn = new BDConnect();
         this.conWithSecbd = conn.getConnectionWithSecondBD();
-        url1 = conn.url1;
-        login1 = conn.login1;
-        password1 = conn.password1;
+        firstBDurl = conn.firstBDurl;
+        firstBDLogin = conn.firstBDLogin;
+        firstBDPassword = conn.firstBDPassword;
 
     }
 
@@ -52,19 +52,19 @@ public class CRUDRepository {
         RowSetFactory factory = RowSetProvider.newFactory();
         jrs = factory.createJoinRowSet();
 
-        String sql1 = "SELECT * FROM " + firstTableName;
+        String sql1 = "SELECT * FROM " + firstBDTableName;
         crsFromFirstBD = factory.createCachedRowSet();
-        crsFromFirstBD.setUrl(url1);
-        crsFromFirstBD.setUsername(login1);
-        crsFromFirstBD.setPassword(password1);
+        crsFromFirstBD.setUrl(firstBDurl);
+        crsFromFirstBD.setUsername(firstBDLogin);
+        crsFromFirstBD.setPassword(firstBDPassword);
         crsFromFirstBD.setCommand(sql1);
         crsFromFirstBD.execute();
 
-        String sql2 = "SELECT * FROM " + secondTableName;
+        String sql2 = "SELECT * FROM " + secondBDTableName;
         crsFromSecondBD = factory.createCachedRowSet();
-        crsFromSecondBD.setUrl(url2);
-        crsFromSecondBD.setUsername(login2);
-        crsFromSecondBD.setPassword(password2);
+        crsFromSecondBD.setUrl(secondBDurl);
+        crsFromSecondBD.setUsername(secondBDLogin);
+        crsFromSecondBD.setPassword(secondBDPassword);
         crsFromSecondBD.setCommand(sql2);
         crsFromSecondBD.execute();
     }
@@ -74,16 +74,16 @@ public class CRUDRepository {
         ResultSet rs;
         String cols = "";
         n = 0;
-        ResultSet primaryKeysFirst = metadata.getPrimaryKeys(null, null, firstTableName);
+        ResultSet primaryKeysFirst = metadata.getPrimaryKeys(null, null, firstBDTableName);
         while(primaryKeysFirst.next()){
             primaryKeyFirstTableName = primaryKeysFirst.getString("COLUMN_NAME");
         }
-        ResultSet primaryKeysSecond = metadata.getPrimaryKeys(null, null, secondTableName);
+        ResultSet primaryKeysSecond = metadata.getPrimaryKeys(null, null, secondBDTableName);
         while(primaryKeysSecond.next()){
             primaryKeySecondTableName = primaryKeysSecond.getString("COLUMN_NAME");
         }
 
-        rs = metadata.getColumns(null, null, firstTableName, null);
+        rs = metadata.getColumns(null, null, firstBDTableName, null);
         while (rs.next()) {
             if (rs.getString("COLUMN_NAME").equals(primaryKeyFirstTableName)){
                 k = n;
@@ -101,7 +101,7 @@ public class CRUDRepository {
 
     public boolean create(String res, String cols) {
         try {
-            String sql = "INSERT " + secondTableName + "(" + cols + ") Values (" + res + ");";
+            String sql = "INSERT " + secondBDTableName + "(" + cols + ") Values (" + res + ");";
             Statement St = conWithSecbd.createStatement();
             System.out.println(sql);
             St.execute(sql);
@@ -115,12 +115,12 @@ public class CRUDRepository {
     public String read(Object id) {
         String rec = "";
         try {
-            String sql = "SELECT * FROM " + firstTableName + " WHERE " + primaryKeyFirstTableName + " = " + id + ";";
+            String sql = "SELECT * FROM " + firstBDTableName + " WHERE " + primaryKeyFirstTableName + " = " + id + ";";
             RowSetFactory factory = RowSetProvider.newFactory();
             CachedRowSet rs = factory.createCachedRowSet();
-            rs.setUrl(url1);
-            rs.setUsername(login1);
-            rs.setPassword(password1);
+            rs.setUrl(firstBDurl);
+            rs.setUsername(firstBDLogin);
+            rs.setPassword(firstBDPassword);
             rs.setCommand(sql);
             rs.execute();
             rs.next();
@@ -137,7 +137,7 @@ public class CRUDRepository {
 
     public void update(String res, Object id) {
         try {
-            String sql = "UPDATE " + secondTableName + " SET " + res + " WHERE " + primaryKeySecondTableName + " = " + id  + ";";
+            String sql = "UPDATE " + secondBDTableName + " SET " + res + " WHERE " + primaryKeySecondTableName + " = " + id  + ";";
             Statement st = conWithSecbd.createStatement();
             System.out.println(sql);
             st.execute(sql);
@@ -147,7 +147,7 @@ public class CRUDRepository {
     }
 
     public void delete(Object id) throws Exception {
-        String sql = "DELETE  FROM " + secondTableName + " WHERE " + primaryKeySecondTableName + " = " + id + " ;" ;
+        String sql = "DELETE  FROM " + secondBDTableName + " WHERE " + primaryKeySecondTableName + " = " + id + " ;" ;
         System.out.println(sql);
         Statement st = conWithSecbd.createStatement();
         st.execute(sql);
