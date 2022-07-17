@@ -50,10 +50,12 @@ public class BDReplication {
     public void initialize() throws Exception{
         crud.connectForRead();
         cols = crud.metadata();
-        crud.downloadData();
-        this.crsFromFirstBD = crud.crsFromFirstBD;
-        this.crsFromSecondBD = crud.crsFromSecondBD;
-        this.jrs = crud.jrs;
+        if (!cols.equals("")) {
+            crud.downloadData();
+            this.crsFromFirstBD = crud.crsFromFirstBD;
+            this.crsFromSecondBD = crud.crsFromSecondBD;
+            this.jrs = crud.jrs;
+        }
         crud.conWithSecbd.close();
         crud.conWithFrstbd.close();
 
@@ -70,23 +72,23 @@ public class BDReplication {
             String secondRSRowObject = "";
             int i = 1;
             do {
-                if (i < (crud.k+1)) {
+                if (i < (crud.primaryKeyPosition+1)) {
                     firstRSObject = jrs.getString(i);
-                    secondRSRowObject = jrs.getString(i + crud.n);
-                } else if (i > (crud.k+1)){
+                    secondRSRowObject = jrs.getString(i + crud.columNumber);
+                } else if (i > (crud.primaryKeyPosition+1)){
                     firstRSObject = jrs.getString(i);
-                    secondRSRowObject = jrs.getString(i + crud.n - 1);
+                    secondRSRowObject = jrs.getString(i + crud.columNumber - 1);
                 } else {
                     id = jrs.getObject(i);
                 }
                 i++;
-            } while(firstRSObject.equals(secondRSRowObject) && i <= crud.n);
-            if (i != (crud.n+1)) {
+            } while(firstRSObject.equals(secondRSRowObject) && i <= crud.columNumber);
+            if (i != (crud.columNumber+1)) {
                 String res = "";
-                if (crud.k != 0) {
+                if (crud.primaryKeyPosition != 0) {
                     res += s[0] + " = " + "'" + jrs.getString(2) + "'";
                     for (int j = 1; j < s.length; j++){
-                        if (j != (crud.k+1)) {
+                        if (j != (crud.primaryKeyPosition+1)) {
                             res += ", " + s[j] + " = " + "'" + jrs.getString(j + 1) + "'";
                         } 
                     }

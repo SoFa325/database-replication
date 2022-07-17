@@ -1,13 +1,16 @@
 package com.company;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Locale;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.JoinRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 
 public class CRUDRepository {
-    int n;
-    int k;
+    int columNumber;
+    int primaryKeyPosition;
     Connection conWithFrstbd;
     Connection conWithSecbd;
     CachedRowSet crsFromFirstBD;
@@ -23,6 +26,7 @@ public class CRUDRepository {
     String secondBDTableName;
     String primaryKeyFirstTableName;
     String primaryKeySecondTableName;
+
 
     public void connectForRead() throws Exception {
         BDConnect conn = new BDConnect();
@@ -70,32 +74,53 @@ public class CRUDRepository {
     }
 
     public String metadata() throws Exception{
-        DatabaseMetaData metadata = conWithFrstbd.getMetaData();
-        ResultSet rs;
+        DatabaseMetaData metadataFromFirstBD = conWithFrstbd.getMetaData();
+        DatabaseMetaData metadataFromSecondBD = conWithSecbd.getMetaData();
+        ResultSet rsFirstBD;
+        ResultSet rsSecondBD;
         String cols = "";
-        n = 0;
-        ResultSet primaryKeysFirst = metadata.getPrimaryKeys(null, null, firstBDTableName);
+        columNumber = 0;
+
+        ResultSet primaryKeysFirst = metadataFromFirstBD.getPrimaryKeys(null, null, firstBDTableName);
         while(primaryKeysFirst.next()){
             primaryKeyFirstTableName = primaryKeysFirst.getString("COLUMN_NAME");
         }
-        ResultSet primaryKeysSecond = metadata.getPrimaryKeys(null, null, secondBDTableName);
+        ResultSet primaryKeysSecond = metadataFromFirstBD.getPrimaryKeys(null, null, secondBDTableName);
         while(primaryKeysSecond.next()){
             primaryKeySecondTableName = primaryKeysSecond.getString("COLUMN_NAME");
         }
 
-        rs = metadata.getColumns(null, null, firstBDTableName, null);
-        while (rs.next()) {
-            if (rs.getString("COLUMN_NAME").equals(primaryKeyFirstTableName)){
-                k = n;
+        rsFirstBD = metadataFromFirstBD.getColumns(null, null, firstBDTableName, null);
+        rsSecondBD = metadataFromSecondBD.getColumns(null, null, secondBDTableName, null);
+        ArrayList<String> alFirst = new ArrayList();
+        ArrayList<String> alSecond = new ArrayList();
+        while (rsSecondBD.next()){
+            alSecond.add(rsSecondBD.getString("COLUMN_NAME").toLowerCase());
+        }
+        while (rsFirstBD.next()) {
+            alFirst.add(rsFirstBD.getString("COLUMN_NAME").toLowerCase());
+            if (rsFirstBD.getString("COLUMN_NAME").equals(primaryKeyFirstTableName)){
+                primaryKeyPosition = columNumber;
             }
             if (cols.equals("")) {
-                cols += rs.getString("COLUMN_NAME");
+                cols += rsFirstBD.getString("COLUMN_NAME");
             } else {
-                cols += ", " + rs.getString("COLUMN_NAME");
+                cols += ", " + rsFirstBD.getString("COLUMN_NAME");
             }
-            n++;
+            columNumber++;
         }
-        System.out.println(k);
+
+        if (alFirst.size() == alSecond.size()) {
+            Collections.sort(alFirst);
+            Collections.sort(alSecond);
+            if (!(alFirst.equals(alSecond))){
+                System.out.println("Tables are not equal");
+                return "";
+            }
+        } else {
+            System.out.println("Tables are not equal");
+            return "";
+        }
         return cols;
     }
 
@@ -125,7 +150,7 @@ public class CRUDRepository {
             rs.execute();
             rs.next();
             rec += rs.getObject(1);
-            for (int i = 2; i <= n; i++){
+            for (int i = 2; i <= columNumber; i++){
                 rec += ", " + "'" + rs.getObject(i) + "'";
             }
             rs.close();
