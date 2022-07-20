@@ -1,58 +1,58 @@
-package com.company;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Locale;
 import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.JoinRowSet;
 import javax.sql.rowset.RowSetFactory;
 import javax.sql.rowset.RowSetProvider;
 
 public class CRUDRepository {
-    int columNumber;
-    int primaryKeyPosition;
-    Connection conWithFrstbd;
-    Connection conWithSecbd;
-    CachedRowSet crsFromFirstBD;
-    CachedRowSet crsFromSecondBD;
-    JoinRowSet jrs;
-    String firstBDurl;
-    String firstBDLogin;
-    String firstBDPassword;
-    String secondBDurl;
-    String secondBDLogin;
-    String secondBDPassword;
-    String firstBDTableName;
-    String secondBDTableName;
-    String primaryKeyFirstTableName;
-    String primaryKeySecondTableName;
+    private int columnNumber;
+    private int primaryKeyPosition;
+    private Connection conWithFrstbd;
+    private Connection conWithSecbd;
+    private CachedRowSet crsFromFirstBD;
+    private CachedRowSet crsFromSecondBD;
+    private JoinRowSet jrs;
+    private String dopstr = "";
+    private String firstBDurl;
+    private String firstBDLogin;
+    private String firstBDPassword;
+    private String secondBDurl;
+    private String secondBDLogin;
+    private String secondBDPassword;
+    private String firstBDTableName;
+    private String secondBDTableName;
+    private String primaryKeyFirstTableName;
+    private String primaryKeySecondTableName;
 
 
-    public void connectForRead() throws Exception {
+    public void connectForRead() throws IOException {
         BDConnect conn = new BDConnect();
         this.conWithFrstbd = conn.getConnectionWithFirstBD();
         this.conWithSecbd = conn.getConnectionWithSecondBD();
-        firstBDurl = conn.firstBDurl;
-        firstBDLogin = conn.firstBDLogin;
-        firstBDPassword = conn.firstBDPassword;
-        secondBDurl = conn.secondBDurl;
-        secondBDLogin = conn.secondBDLogin;
-        secondBDPassword = conn.secondBDPassword;
-        firstBDTableName = conn.firstBDTableName;
-        secondBDTableName = conn.secondBDTableName;
+        firstBDurl = conn.getFirstBDurl();
+        firstBDLogin = conn.getFirstBDLogin();
+        firstBDPassword = conn.getFirstBDPassword();
+        secondBDurl = conn.getSecondBDurl();
+        secondBDLogin = conn.getSecondBDLogin();
+        secondBDPassword = conn.getSecondBDPassword();
+        firstBDTableName = conn.getFirstBDTableName();
+        secondBDTableName = conn.getSecondBDTableName();
 
     }
 
-    public void connectForUpdate() throws Exception {
+    public void connectForUpdate() throws IOException {
         BDConnect conn = new BDConnect();
         this.conWithSecbd = conn.getConnectionWithSecondBD();
-        firstBDurl = conn.firstBDurl;
-        firstBDLogin = conn.firstBDLogin;
-        firstBDPassword = conn.firstBDPassword;
+        firstBDurl = conn.getFirstBDurl();
+        firstBDLogin = conn.getFirstBDLogin();
+        firstBDPassword = conn.getFirstBDPassword();
 
     }
 
-    public void downloadData() throws Exception{
+    public void downloadData() throws SQLException {
         RowSetFactory factory = RowSetProvider.newFactory();
         jrs = factory.createJoinRowSet();
 
@@ -73,13 +73,13 @@ public class CRUDRepository {
         crsFromSecondBD.execute();
     }
 
-    public String metadata() throws Exception{
+    public String metadata() throws SQLException {
         DatabaseMetaData metadataFromFirstBD = conWithFrstbd.getMetaData();
         DatabaseMetaData metadataFromSecondBD = conWithSecbd.getMetaData();
         ResultSet rsFirstBD;
         ResultSet rsSecondBD;
         String cols = "";
-        columNumber = 0;
+        columnNumber = 0;
 
         ResultSet primaryKeysFirst = metadataFromFirstBD.getPrimaryKeys(null, null, firstBDTableName);
         while(primaryKeysFirst.next()){
@@ -100,14 +100,14 @@ public class CRUDRepository {
         while (rsFirstBD.next()) {
             alFirst.add(rsFirstBD.getString("COLUMN_NAME").toLowerCase());
             if (rsFirstBD.getString("COLUMN_NAME").equals(primaryKeyFirstTableName)){
-                primaryKeyPosition = columNumber;
+                primaryKeyPosition = columnNumber;
             }
             if (cols.equals("")) {
                 cols += rsFirstBD.getString("COLUMN_NAME");
             } else {
                 cols += ", " + rsFirstBD.getString("COLUMN_NAME");
             }
-            columNumber++;
+            columnNumber++;
         }
 
         if (alFirst.size() == alSecond.size()) {
@@ -122,12 +122,14 @@ public class CRUDRepository {
         return cols;
     }
 
-    public boolean create(String res, String cols) {
+    public boolean create(Object[] res, String cols) {
         try {
-            String sql = "INSERT INTO " + secondBDTableName + " (" + cols + ") Values (" + res + ");";
-            Statement St = conWithSecbd.createStatement();
-            System.out.println(sql);
-            St.execute(sql);
+            String sql = "INSERT INTO " + secondBDTableName + " (" + cols + ") Values (" + dopstr + ");";
+            PreparedStatement st = conWithSecbd.prepareStatement(sql);
+            for (int i = 0; i < columnNumber; i++){
+                st.setObject(i+1, res[i]);
+            }
+            st.executeUpdate();
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
@@ -135,26 +137,27 @@ public class CRUDRepository {
         return true;
     }
 
-    public String read(Object id) {
-        String rec = "";
-        try {
-            String sql = "SELECT * FROM " + firstBDTableName + " WHERE " + primaryKeyFirstTableName + " = " + id + ";";
-            RowSetFactory factory = RowSetProvider.newFactory();
-            CachedRowSet rs = factory.createCachedRowSet();
-            rs.setUrl(firstBDurl);
-            rs.setUsername(firstBDLogin);
-            rs.setPassword(firstBDPassword);
-            rs.setCommand(sql);
-            rs.execute();
-            rs.next();
-            rec += rs.getObject(1);
-            for (int i = 2; i <= columNumber; i++){
-                rec += ", " + "'" + rs.getObject(i) + "'";
+    public Object[] read(Object id) throws SQLException {
+        Object [] rec = new Object[columnNumber];
+        String sql = "SELECT * FROM " + firstBDTableName + " WHERE " + primaryKeyFirstTableName + " = " + id + ";";
+        RowSetFactory factory = RowSetProvider.newFactory();
+        CachedRowSet rs = factory.createCachedRowSet();
+        rs.setUrl(firstBDurl);
+        rs.setUsername(firstBDLogin);
+        rs.setPassword(firstBDPassword);
+        rs.setCommand(sql);
+        rs.execute();
+        rs.next();
+        dopstr = "";
+        for (int i = 1; i <= columnNumber; i++){
+            rec[i-1] = rs.getObject(i);
+            if (i != columnNumber) {
+                dopstr += "?,";
+            } else {
+                dopstr += "?";
             }
-            rs.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
+        rs.close();
         return rec;
     }
 
@@ -162,18 +165,51 @@ public class CRUDRepository {
         try {
             String sql = "UPDATE " + secondBDTableName + " SET " + res + " WHERE " + primaryKeySecondTableName + " = " + id  + ";";
             Statement st = conWithSecbd.createStatement();
-            System.out.println(sql);
             st.execute(sql);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    public void delete(Object id) throws Exception {
+    public void delete(Object id) throws SQLException {
         String sql = "DELETE  FROM " + secondBDTableName + " WHERE " + primaryKeySecondTableName + " = " + id + " ;" ;
-        System.out.println(sql);
         Statement st = conWithSecbd.createStatement();
         st.execute(sql);
     }
 
+    public CachedRowSet getCrsFromFirstBD() {
+        return crsFromFirstBD;
+    }
+
+    public CachedRowSet getCrsFromSecondBD() {
+        return crsFromSecondBD;
+    }
+
+    public Connection getConWithFrstbd() {
+        return conWithFrstbd;
+    }
+
+    public Connection getConWithSecbd() {
+        return conWithSecbd;
+    }
+
+    public int getColumnNumber() {
+        return columnNumber;
+    }
+
+    public int getPrimaryKeyPosition() {
+        return primaryKeyPosition;
+    }
+
+    public JoinRowSet getJrs() {
+        return jrs;
+    }
+
+    public String getPrimaryKeyFirstTableName() {
+        return primaryKeyFirstTableName;
+    }
+
+    public String getPrimaryKeySecondTableName() {
+        return primaryKeySecondTableName;
+    }
 }

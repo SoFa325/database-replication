@@ -1,22 +1,22 @@
-package com.company;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.sql.*;
 import java.util.Properties;
 
 
 public class BDConnect {
-    String firstBDurl;
-    String firstBDLogin;
-    String firstBDPassword;
-    String secondBDurl;
-    String secondBDLogin;
-    String secondBDPassword;
-    String firstBDTableName;
-    String secondBDTableName;
+    private String firstBDurl;
+    private String firstBDLogin;
+    private String firstBDPassword;
+    private String secondBDurl;
+    private String secondBDLogin;
+    private String secondBDPassword;
+    private String firstBDTableName;
+    private String secondBDTableName;
 
-    public BDConnect() throws Exception {
-        File file = new File("C:\\Users\\sofya\\IdeaProjects\\database_replication\\src\\com\\company\\config.properties");
+    public BDConnect() throws IOException {
+        File file = new File("C:\\Users\\sofya\\IdeaProjects\\database_replication\\src\\config.properties");
         Properties properties = new Properties();
         properties.load(new FileReader(file));
         this.firstBDurl = "jdbc:" + properties.getProperty("firstBDType") + ":" + properties.getProperty("firstBDAddress") + "/" + properties.getProperty("firstBDName");
@@ -49,4 +49,35 @@ public class BDConnect {
         return con;
     }
 
+    public String getFirstBDLogin() {
+        return firstBDLogin;
+    }
+
+    public String getFirstBDPassword() {
+        return firstBDPassword;
+    }
+
+    public String getFirstBDTableName() {
+        return firstBDTableName;
+    }
+
+    public String getFirstBDurl() {
+        return firstBDurl;
+    }
+
+    public String getSecondBDLogin() {
+        return secondBDLogin;
+    }
+
+    public String getSecondBDPassword() {
+        return secondBDPassword;
+    }
+
+    public String getSecondBDurl() {
+        return secondBDurl;
+    }
+
+    public String getSecondBDTableName() {
+        return secondBDTableName;
+    }
 }
